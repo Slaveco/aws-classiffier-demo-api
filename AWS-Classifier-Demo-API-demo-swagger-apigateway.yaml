@@ -1,0 +1,310 @@
+---
+swagger: "2.0"
+info:
+  version: "1.0.0"
+  title: "AWS OpenAI Classifier Demo API"
+host: "h3xxn0xnl8.execute-api.us-east-1.amazonaws.com"
+basePath: "/demo"
+schemes:
+- "https"
+paths:
+  /classify:
+    get:
+      summary: "Classify item name"
+      description: "Для переданного наименования номенклатуры подбирает все классы\
+        \ вплоть до конечного на базе классификатора"
+      operationId: "classify"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "itemName"
+        in: "query"
+        description: "Наименование номенклатуры"
+        required: true
+        type: "string"
+      responses:
+        "200":
+          description: "Successful operation"
+          schema:
+            $ref: "#/definitions/modelResponseForClassifiy"
+        "400":
+          description: "Bad request - ошибка в переданных данных (например, отсутс\
+            твует обязательный параметр)"
+        "500":
+          description: "Internal server error - ошибка подключения к Redis или вне\
+            шнему ресурсу"
+        "502":
+          description: "Bad gateway - ошибка при попытке соединения с внешним серв\
+            исом"
+        "504":
+          description: "Gateway timeout - тайм-аут при подключении к Redis или вне\
+            шнему ресурсу"
+      security:
+      - api_key: []
+      x-amazon-apigateway-request-validator: "Validate body, query string parameters,\
+        \ and headers"
+      x-amazon-apigateway-integration:
+        type: "aws_proxy"
+        uri: "arn:aws:apigateway:us-east-1:lambda:path/2015-03-31/functions/arn:aws:lambda:us-east-1:026090549115:function:classify-demo/invocations"
+        httpMethod: "POST"
+        responses:
+          default:
+            statusCode: "200"
+        passthroughBehavior: "when_no_match"
+        timeoutInMillis: 29000
+        contentHandling: "CONVERT_TO_TEXT"
+  /pickAtt:
+    post:
+      summary: "Determine attributes based on the item name and final class"
+      description: "Для переданного наименования номенклатуры и конечного класса о\
+        пределяет значения аттрибутов"
+      operationId: "pickAtt"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - in: "body"
+        name: "modelRequestForPickAtt"
+        required: true
+        schema:
+          $ref: "#/definitions/modelRequestForPickAtt"
+      responses:
+        "200":
+          description: "Successful operation"
+          schema:
+            $ref: "#/definitions/modelResponseForPickAtt"
+        "400":
+          description: "Bad request - ошибка в переданных данных (например, отсутс\
+            твует обязательное поле)"
+        "500":
+          description: "Internal server error - ошибка подключения к Redis или вне\
+            шнему ресурсу"
+        "502":
+          description: "Bad gateway - ошибка при попытке соединения с внешним серв\
+            исом"
+        "504":
+          description: "Gateway timeout - тайм-аут при подключении к Redis или вне\
+            шнему ресурсу"
+      security:
+      - api_key: []
+      x-amazon-apigateway-request-validator: "Validate body, query string parameters,\
+        \ and headers"
+      x-amazon-apigateway-integration:
+        type: "aws_proxy"
+        uri: "arn:aws:apigateway:us-east-1:lambda:path/2015-03-31/functions/arn:aws:lambda:us-east-1:026090549115:function:pickAtt-demo/invocations"
+        httpMethod: "POST"
+        responses:
+          default:
+            statusCode: "200"
+        passthroughBehavior: "when_no_match"
+        timeoutInMillis: 29000
+        contentHandling: "CONVERT_TO_TEXT"
+securityDefinitions:
+  api_key:
+    type: "apiKey"
+    name: "x-api-key"
+    in: "header"
+definitions:
+  modelResponseForPickAtt:
+    type: "object"
+    properties:
+      input_item_name:
+        type: "string"
+      input_final_class_name:
+        type: "string"
+      input_final_class_code:
+        type: "string"
+      result:
+        type: "array"
+        items:
+          type: "object"
+          properties:
+            attribute_name:
+              type: "string"
+            attribute_type:
+              type: "string"
+            attribute_example:
+              type: "string"
+            attribute_decicion:
+              type: "string"
+  modelResponseForClassifiy:
+    type: "object"
+    properties:
+      input_item_name:
+        type: "string"
+      result:
+        type: "array"
+        items:
+          type: "object"
+          properties:
+            class_name:
+              type: "string"
+            class_code:
+              type: "string"
+  modelRequestForPickAtt:
+    type: "object"
+    required:
+    - "final_class_code"
+    - "final_class_name"
+    - "item_name"
+    properties:
+      item_name:
+        type: "string"
+      final_class_name:
+        type: "string"
+      final_class_code:
+        type: "string"
+x-amazon-apigateway-documentation:
+  version: "1.1"
+  createdDate: "2025-11-05T09:39:21Z"
+  documentationParts:
+  - location:
+      type: "METHOD"
+      path: "/classify"
+      method: "GET"
+    properties:
+      summary: "Classify item name"
+      description: "Для переданного наименования номенклатуры подбирает все классы\
+        \ вплоть до конечного на базе классификатора"
+  - location:
+      type: "METHOD"
+      path: "/pickAtt"
+      method: "POST"
+    properties:
+      summary: "Determine attributes based on the item name and final class"
+      description: "Для переданного наименования номенклатуры и конечного класса о\
+        пределяет значения аттрибутов"
+  - location:
+      type: "METHOD"
+      path: "/updateClassifier"
+      method: "POST"
+    properties:
+      summary: "Update classifier data in Redis"
+      description: "Обновляет данные в классификаторе. Если ключ в Redis уже сущес\
+        твует, данные перезапишутся. Если ключа нет, создается новый."
+  - location:
+      type: "QUERY_PARAMETER"
+      path: "/classify"
+      method: "GET"
+      name: "itemName"
+    properties:
+      description: "Наименование номенклатуры"
+  - location:
+      type: "RESPONSE"
+      path: "/classify"
+      method: "GET"
+      statusCode: "200"
+    properties:
+      description: "Successful operation"
+  - location:
+      type: "RESPONSE"
+      path: "/classify"
+      method: "GET"
+      statusCode: "400"
+    properties:
+      description: "Bad request - ошибка в переданных данных (например, отсутствуе\
+        т обязательный параметр)"
+  - location:
+      type: "RESPONSE"
+      path: "/classify"
+      method: "GET"
+      statusCode: "500"
+    properties:
+      description: "Internal server error - ошибка подключения к Redis или внешнем\
+        у ресурсу"
+  - location:
+      type: "RESPONSE"
+      path: "/classify"
+      method: "GET"
+      statusCode: "502"
+    properties:
+      description: "Bad gateway - ошибка при попытке соединения с внешним сервисом"
+  - location:
+      type: "RESPONSE"
+      path: "/classify"
+      method: "GET"
+      statusCode: "504"
+    properties:
+      description: "Gateway timeout - тайм-аут при подключении к Redis или внешнем\
+        у ресурсу"
+  - location:
+      type: "RESPONSE"
+      path: "/pickAtt"
+      method: "POST"
+      statusCode: "200"
+    properties:
+      description: "Successful operation"
+  - location:
+      type: "RESPONSE"
+      path: "/pickAtt"
+      method: "POST"
+      statusCode: "400"
+    properties:
+      description: "Bad request - ошибка в переданных данных (например, отсутствуе\
+        т обязательное поле)"
+  - location:
+      type: "RESPONSE"
+      path: "/pickAtt"
+      method: "POST"
+      statusCode: "500"
+    properties:
+      description: "Internal server error - ошибка подключения к Redis или внешнем\
+        у ресурсу"
+  - location:
+      type: "RESPONSE"
+      path: "/pickAtt"
+      method: "POST"
+      statusCode: "502"
+    properties:
+      description: "Bad gateway - ошибка при попытке соединения с внешним сервисом"
+  - location:
+      type: "RESPONSE"
+      path: "/pickAtt"
+      method: "POST"
+      statusCode: "504"
+    properties:
+      description: "Gateway timeout - тайм-аут при подключении к Redis или внешнем\
+        у ресурсу"
+  - location:
+      type: "RESPONSE"
+      path: "/updateClassifier"
+      method: "POST"
+      statusCode: "200"
+    properties:
+      description: "Successful operation"
+  - location:
+      type: "RESPONSE"
+      path: "/updateClassifier"
+      method: "POST"
+      statusCode: "400"
+    properties:
+      description: "Bad request - ошибка в переданных данных (например, отсутствуе\
+        т обязательное поле)"
+  - location:
+      type: "RESPONSE"
+      path: "/updateClassifier"
+      method: "POST"
+      statusCode: "500"
+    properties:
+      description: "Internal server error - ошибка подключения к Redis или внешнем\
+        у ресурсу"
+  - location:
+      type: "RESPONSE"
+      path: "/updateClassifier"
+      method: "POST"
+      statusCode: "502"
+    properties:
+      description: "Bad gateway - ошибка при попытке соединения с внешним сервисом"
+  - location:
+      type: "RESPONSE"
+      path: "/updateClassifier"
+      method: "POST"
+      statusCode: "504"
+    properties:
+      description: "Gateway timeout - тайм-аут при подключении к Redis или внешнем\
+        у ресурсу"
+x-amazon-apigateway-request-validators:
+  Validate body, query string parameters, and headers:
+    validateRequestParameters: true
+    validateRequestBody: true
