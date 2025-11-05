@@ -2,7 +2,7 @@
 swagger: "2.0"
 info:
   version: "1.0.0"
-  title: "AWS OpenAI Classifier Demo API"
+  title: "AWS Classifier Demo API"
 host: "h3xxn0xnl8.execute-api.us-east-1.amazonaws.com"
 basePath: "/demo"
 schemes:
